@@ -103,7 +103,8 @@ VIR_ENUM_IMPL(virDomainDeviceAddress, VIR_DOMAIN_DEVICE_ADDRESS_TYPE_LAST,
 VIR_ENUM_IMPL(virDomainDisk, VIR_DOMAIN_DISK_TYPE_LAST,
               "block",
               "file",
-              "dir")
+              "dir",
+              "virtual")
 
 VIR_ENUM_IMPL(virDomainDiskDevice, VIR_DOMAIN_DISK_DEVICE_LAST,
               "disk",
@@ -1458,6 +1459,9 @@ virDomainDiskDefParseXML(virCapsPtr caps,
                 case VIR_DOMAIN_DISK_TYPE_DIR:
                     source = virXMLPropString(cur, "dir");
                     break;
+               case VIR_DOMAIN_DISK_TYPE_VIRTUAL:
+                   source = virXMLPropString(cur, "path");
+                   break;
                 default:
                     virDomainReportError(VIR_ERR_INTERNAL_ERROR,
                                          _("unexpected disk type %s"),
@@ -5213,6 +5217,10 @@ virDomainDiskDefFormat(virBufferPtr buf,
             break;
         case VIR_DOMAIN_DISK_TYPE_DIR:
             virBufferEscapeString(buf, "      <source dir='%s'/>\n",
+                                  def->src);
+            break;
+        case VIR_DOMAIN_DISK_TYPE_VIRTUAL:
+            virBufferEscapeString(buf, "      <source path='%s'/>\n",
                                   def->src);
             break;
         default:
