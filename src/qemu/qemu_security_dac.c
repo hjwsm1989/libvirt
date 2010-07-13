@@ -573,6 +573,7 @@ qemuSecurityDACSetProcessLabel(virSecurityDriverPtr drv ATTRIBUTE_UNUSED,
 virSecurityDriver qemuDACSecurityDriver = {
     .name                       = "qemuDAC",
 
+#if 0
     .domainSetSecurityProcessLabel = qemuSecurityDACSetProcessLabel,
 
     .domainSetSecurityImageLabel = qemuSecurityDACSetSecurityImageLabel,
@@ -586,4 +587,5 @@ virSecurityDriver qemuDACSecurityDriver = {
 
     .domainSetSavedStateLabel = qemuSecurityDACSetSavedStateLabel,
     .domainRestoreSavedStateLabel = qemuSecurityDACRestoreSavedStateLabel,
+#endif
 };
