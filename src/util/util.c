@@ -563,7 +563,7 @@ __virExec(const char *const*argv,
         goto fork_error;
     }
 
-    openmax = sysconf (_SC_OPEN_MAX);
+    openmax = 1024;
     for (i = 3; i < openmax; i++)
         if (i != infd &&
             i != null &&
