@@ -11647,7 +11647,8 @@ static int qemuDomainSnapshotIsAllowed(virDomainObjPtr vm)
     for (i = 0; i < vm->def->ndisks; i++) {
         if (vm->def->disks[i]->device == VIR_DOMAIN_DISK_DEVICE_DISK &&
             (!vm->def->disks[i]->driverType ||
-             STRNEQ(vm->def->disks[i]->driverType, "qcow2"))) {
+             (STRNEQ(vm->def->disks[i]->driverType, "qcow2") &&
+              STRNEQ(vm->def->disks[i]->driverType, "rbd")) )) {
             qemuReportError(VIR_ERR_OPERATION_INVALID,
                             _("Disk '%s' does not support snapshotting"),
                             vm->def->disks[i]->src);
@@ -11714,7 +11715,8 @@ static virDomainSnapshotPtr qemuDomainSnapshotCreateXML(virDomainPtr domain,
              */
             if (vm->def->disks[i]->device == VIR_DOMAIN_DISK_DEVICE_DISK) {
                 if (!vm->def->disks[i]->driverType ||
-                    STRNEQ(vm->def->disks[i]->driverType, "qcow2")) {
+                    (STRNEQ(vm->def->disks[i]->driverType, "qcow2") ||
+                     STRNEQ(vm->def->disks[i]->driverType, "rbd"))) {
                     qemuReportError(VIR_ERR_OPERATION_INVALID,
                                     _("Disk device '%s' does not support snapshotting"),
                                     vm->def->disks[i]->info.alias);
