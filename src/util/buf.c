@@ -383,9 +383,29 @@ virBufferEscapeSexpr(const virBufferPtr buf,
                      const char *format,
                      const char *str)
 {
+    virBufferEscape(buf, "\\\'", format, str);
+}
+
+/**
+ * virBufferEscape:
+ * @buf:  the buffer to dump
+ * @toescape: NULL-terminated list of characters to escape
+ * @format: a printf like format string but with only one %s parameter
+ * @str:  the string argument which need to be escaped
+ *
+ * Do a formatted print with a single string to a buffer.  Any characters
+ * in the provided list are escaped with a preceeding \.
+ */
+void
+virBufferEscape(const virBufferPtr buf,
+                const char *toescape,
+                const char *format,
+                const char *str)
+{
     int len;
     char *escaped, *out;
     const char *cur;
+    const char *p;
 
     if ((format == NULL) || (buf == NULL) || (str == NULL))
         return;
@@ -408,14 +428,13 @@ virBufferEscapeSexpr(const virBufferPtr buf,
     cur = str;
     out = escaped;
     while (*cur != 0) {
-        switch (*cur) {
-        case '\\':
-        case '\'':
-            *out++ = '\\';
-            /* fallthrough */
-        default:
-            *out++ = *cur;
+        for (p = toescape; *p; ++p) {
+            if (*cur == *p) {
+                *out++ = '\\';
+                break;
+            }
         }
+        *out++ = *cur;
         cur++;
     }
     *out = 0;
