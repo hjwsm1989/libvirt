@@ -2257,6 +2257,7 @@ typedef virSecret *virSecretPtr;
 typedef enum {
     VIR_SECRET_USAGE_TYPE_NONE = 0,
     VIR_SECRET_USAGE_TYPE_VOLUME = 1,
+    VIR_SECRET_USAGE_TYPE_CEPH = 2,
     /* Expect more owner types later... */
 } virSecretUsageType;
 

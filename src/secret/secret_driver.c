@@ -144,6 +144,11 @@ secretFindByUsage(virSecretDriverStatePtr driver, int usageType, const char *usa
             if (STREQ(s->def->usage.volume, usageID))
                 return s;
             break;
+
+        case VIR_SECRET_USAGE_TYPE_CEPH:
+            if (STREQ(s->def->usage.ceph_id, usageID))
+                return s;
+           break;
         }
     }
     return NULL;
