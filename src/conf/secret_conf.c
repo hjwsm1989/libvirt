@@ -35,7 +35,8 @@
 
 #define VIR_FROM_THIS VIR_FROM_SECRET
 
-VIR_ENUM_IMPL(virSecretUsageType, VIR_SECRET_USAGE_TYPE_VOLUME + 1, "none", "volume")
+VIR_ENUM_IMPL(virSecretUsageType, VIR_SECRET_USAGE_TYPE_LAST,
+              "none", "volume", "ceph")
 
 void
 virSecretDefFree(virSecretDefPtr def)
@@ -52,6 +53,10 @@ virSecretDefFree(virSecretDefPtr def)
         VIR_FREE(def->usage.volume);
         break;
 
+    case VIR_SECRET_USAGE_TYPE_CEPH:
+        VIR_FREE(def->usage.authIdDomain);
+        break;
+
     default:
         VIR_ERROR(_("unexpected secret usage type %d"), def->usage_type);
         break;
@@ -65,6 +70,8 @@ virSecretDefParseUsage(xmlXPathContextPtr ctxt,
 {
     char *type_str;
     int type;
+    char *authId, *authDomain;
+    int ret;
 
     type_str = virXPathString("string(./usage/@type)", ctxt);
     if (type_str == NULL) {
@@ -92,6 +99,27 @@ virSecretDefParseUsage(xmlXPathContextPtr ctxt,
                                  _("volume usage specified, but volume path is missing"));
             return -1;
         }
+        break;
+
+    case VIR_SECRET_USAGE_TYPE_CEPH:
+        authId = virXPathString("string(./usage/auth/@id)", ctxt);
+        if (!authId) {
+            virSecretReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                                 _("ceph usage specified, but auth id is missing"));
+            return -1;
+        }
+        authDomain = virXPathString("string(./usage/auth/@domain)", ctxt);
+        if (!authDomain) {
+            VIR_FREE(authId);
+            virSecretReportError(VIR_ERR_INTERNAL_ERROR, "%s",
+                                 _("ceph usage specified, but auth domain is missing"));
+            return -1;
+        }
+        ret = virAlloc(&def->usage.authIdDomain, strlen(authId) +
+                       strlen(authDomain) + 2);
+        sprintf(def->usage.authIdDomain, "%s/%s", authId, authDomain);
+        VIR_FREE(authId);
+        VIR_FREE(authDomain);
         break;
 
     default:
@@ -220,6 +248,9 @@ virSecretDefFormatUsage(virBufferPtr buf,
                         const virSecretDefPtr def)
 {
     const char *type;
+    char *p;
+    char idAuth[80];
+    int len;
 
     type = virSecretUsageTypeTypeToString(def->usage_type);
     if (type == NULL) {
@@ -237,6 +268,18 @@ virSecretDefFormatUsage(virBufferPtr buf,
         if (def->usage.volume != NULL)
             virBufferEscapeString(buf, "    <volume>%s</volume>\n",
                                   def->usage.volume);
+        break;
+
+    case VIR_SECRET_USAGE_TYPE_CEPH:
+        if (def->usage.authIdDomain != NULL) {
+            p = strchr(def->usage.authIdDomain, '/');
+            len = p - def->usage.authIdDomain;
+            strncpy(idAuth, def->usage.authIdDomain, len);
+            idAuth[len] = '\0';
+            p++;
+            virBufferEscapeString(buf, "    <auth id='%s'", idAuth);
+            virBufferEscapeString(buf, " domain='%s'/>\n", p);
+        }
         break;
 
     default:
