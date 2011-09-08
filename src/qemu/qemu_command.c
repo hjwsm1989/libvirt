@@ -1453,6 +1453,9 @@ qemuBuildDriveStr(virDomainDiskDefPtr disk,
                 break;
             case VIR_DOMAIN_DISK_PROTOCOL_RBD:
                 virBufferAsprintf(&opt, "file=rbd:%s", disk->src);
+                if (disk->authId) {
+                    virBufferStrcat(&opt, ":id=", disk->authId, NULL);
+                }
                 if (disk->nhosts > 0) {
                     /* TODO: support multiple hosts */
                     virBufferStrcat(&opt, ":mon_host=",
