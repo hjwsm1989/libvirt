@@ -226,6 +226,7 @@ struct _virDomainDiskDef {
     char *driverName;
     char *driverType;
     char *serial;
+    char *snapName;
     int cachemode;
     int error_policy;
     int bootIndex;
