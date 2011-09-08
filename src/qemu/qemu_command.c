@@ -1344,6 +1344,7 @@ qemuBuildDriveStr(virDomainDiskDefPtr disk,
     const char *bus = virDomainDiskQEMUBusTypeToString(disk->bus);
     int idx = virDiskNameToIndex(disk->dst);
     int busid = -1, unitid = -1;
+    int i;
 
     if (idx < 0) {
         qemuReportError(VIR_ERR_INTERNAL_ERROR,
@@ -1452,16 +1453,27 @@ qemuBuildDriveStr(virDomainDiskDefPtr disk,
                                   disk->hosts->name, disk->hosts->port);
                 break;
             case VIR_DOMAIN_DISK_PROTOCOL_RBD:
-                virBufferAsprintf(&opt, "file=rbd:%s", disk->src);
+                virBufferEscape(&opt, "@:", "file=rbd:%s", disk->src);
+                if (disk->snapName) {
+                    virBufferEscape(&opt, ":", "@%s", disk->snapName);
+                }
                 if (disk->authId) {
-                    virBufferStrcat(&opt, ":id=", disk->authId, NULL);
+                    virBufferEscape(&opt, ":", ":id=%s", disk->authId);
                 }
                 if (disk->nhosts > 0) {
-                    /* TODO: support multiple hosts */
-                    virBufferStrcat(&opt, ":mon_host=",
-                                    disk->hosts->name,
-                                    NULL);
-                    /* TODO: specify port, too */
+                    virBufferStrcat(&opt, ":mon_host=", NULL);
+                    for (i = 0; i < disk->nhosts; ++i) {
+                        if (i) {
+                            virBufferStrcat(&opt, "\\,", NULL);
+                        }
+                        if (disk->hosts[i].port) {
+                            virBufferAsprintf(&opt, "%s\\:%s",
+                                              disk->hosts[i].name,
+                                              disk->hosts[i].port);
+                        } else {
+                            virBufferAsprintf(&opt, "%s", disk->hosts[i].name);
+                        }
+                    }
                 }
                 virBufferStrcat(&opt, ",", NULL);
                 break;
