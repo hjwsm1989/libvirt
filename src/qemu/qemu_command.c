@@ -1452,8 +1452,15 @@ qemuBuildDriveStr(virDomainDiskDefPtr disk,
                                   disk->hosts->name, disk->hosts->port);
                 break;
             case VIR_DOMAIN_DISK_PROTOCOL_RBD:
-                /* TODO: set monitor hostnames */
-                virBufferAsprintf(&opt, "file=rbd:%s,", disk->src);
+                virBufferAsprintf(&opt, "file=rbd:%s", disk->src);
+                if (disk->nhosts > 0) {
+                    /* TODO: support multiple hosts */
+                    virBufferStrcat(&opt, ":mon_host=",
+                                    disk->hosts->name,
+                                    NULL);
+                    /* TODO: specify port, too */
+                }
+                virBufferStrcat(&opt, ",", NULL);
                 break;
             case VIR_DOMAIN_DISK_PROTOCOL_SHEEPDOG:
                 if (disk->nhosts == 0)
