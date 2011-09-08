@@ -2259,6 +2259,8 @@ typedef enum {
     VIR_SECRET_USAGE_TYPE_VOLUME = 1,
     VIR_SECRET_USAGE_TYPE_CEPH = 2,
     /* Expect more owner types later... */
+
+    VIR_SECRET_USAGE_TYPE_LAST
 } virSecretUsageType;
 
 virConnectPtr           virSecretGetConnect     (virSecretPtr secret);

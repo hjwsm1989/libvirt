@@ -146,9 +146,9 @@ secretFindByUsage(virSecretDriverStatePtr driver, int usageType, const char *usa
             break;
 
         case VIR_SECRET_USAGE_TYPE_CEPH:
-            if (STREQ(s->def->usage.ceph_id, usageID))
+            if (STREQ(s->def->usage.authIdDomain, usageID))
                 return s;
-           break;
+            break;
         }
     }
     return NULL;
@@ -611,6 +611,9 @@ secretUsageIDForDef(virSecretDefPtr def)
 
     case VIR_SECRET_USAGE_TYPE_VOLUME:
         return def->usage.volume;
+
+    case VIR_SECRET_USAGE_TYPE_CEPH:
+        return def->usage.authIdDomain;
 
     default:
         return NULL;
