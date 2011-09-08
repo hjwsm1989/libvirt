@@ -2086,6 +2086,7 @@ virDomainDiskDefParseXML(virCapsPtr caps,
     char *serial = NULL;
     char *authId = NULL;
     char *authDomain = NULL;
+    char *snapName = NULL;
 
     if (VIR_ALLOC(def) < 0) {
         virReportOOMError();
@@ -2173,6 +2174,15 @@ virDomainDiskDefParseXML(virCapsPtr caps,
                                 goto error;
                             }
                             authDomain = virXMLPropString(child, "domain");
+                        }
+                        if (child->type == XML_ELEMENT_NODE &&
+                            xmlStrEqual(child->name, BAD_CAST "snap")) {
+                            snapName = virXMLPropString(child, "name");
+                            if (!snapName) {
+                                virDomainReportError(VIR_ERR_INTERNAL_ERROR,
+                                                     "%s", _("missing name for snap"));
+                                goto error;
+                            }
                         }
                         child = child->next;
                     }
@@ -2397,6 +2407,8 @@ virDomainDiskDefParseXML(virCapsPtr caps,
     encryption = NULL;
     def->serial = serial;
     serial = NULL;
+    def->snapName = snapName;
+    snapName = NULL;
 
     if (!def->driverType &&
         caps->defaultDiskDriverType &&
