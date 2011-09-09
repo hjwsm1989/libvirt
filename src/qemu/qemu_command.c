@@ -1336,7 +1336,8 @@ qemuSafeSerialParamValue(const char *value)
 
 
 char *
-qemuBuildDriveStr(virDomainDiskDefPtr disk,
+qemuBuildDriveStr(virConnectPtr conn,
+                  virDomainDiskDefPtr disk,
                   bool bootable,
                   virBitmapPtr qemuCaps)
 {
@@ -3482,7 +3483,7 @@ qemuBuildCommandLine(virConnectPtr conn,
                     deviceFlagMasked = true;
                 }
             }
-            optstr = qemuBuildDriveStr(disk,
+            optstr = qemuBuildDriveStr(conn, disk,
                                        emitBootindex ? false : !!bootindex,
                                        qemuCaps);
             if (deviceFlagMasked)
