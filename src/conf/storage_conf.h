@@ -120,6 +120,7 @@ enum virStoragePoolType {
     VIR_STORAGE_POOL_ISCSI,    /* iSCSI targets */
     VIR_STORAGE_POOL_SCSI,     /* SCSI HBA */
     VIR_STORAGE_POOL_MPATH,    /* Multipath devices */
+    VIR_STORAGE_POOL_RBD,      /* RBD (rados block device) */
 
     VIR_STORAGE_POOL_LAST,
 };

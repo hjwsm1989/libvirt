@@ -1618,6 +1618,8 @@ AC_ARG_WITH([storage-mpath],
   AC_HELP_STRING([--with-storage-mpath], [with mpath backend for the storage driver @<:@default=check@:>@]),[],[with_storage_mpath=check])
 AC_ARG_WITH([storage-disk],
   AC_HELP_STRING([--with-storage-disk], [with GPartd Disk backend for the storage driver @<:@default=check@:>@]),[],[with_storage_disk=check])
+AC_ARG_WITH([storage-rbd],
+  AC_HELP_STRING([--with-storage-rbd], [with RBD storage pool support @<:@default=check@:>@]),[],[with_storage_rbd=check])
 
 if test "$with_libvirtd" = "no"; then
   with_storage_dir=no
@@ -1627,6 +1629,7 @@ if test "$with_libvirtd" = "no"; then
   with_storage_scsi=no
   with_storage_mpath=no
   with_storage_disk=no
+  with_storage_rbd=no
 fi
 if test "$with_storage_dir" = "yes" ; then
   AC_DEFINE_UNQUOTED([WITH_STORAGE_DIR], 1, [whether directory backend for storage driver is enabled])
@@ -1775,6 +1778,13 @@ if test "$with_storage_mpath" = "check"; then
    fi
 fi
 AM_CONDITIONAL([WITH_STORAGE_MPATH], [test "$with_storage_mpath" = "yes"])
+
+AC_DEFINE_UNQUOTED([WITH_STORAGE_RBD], 1,
+        [whether RBD backend for storage driver is enabled])
+if test "$with_storage_rbd" = "check"; then
+   AC_CHECK_LIB([rbd], [rbd_create],[with_storage_rbd=yes],[])
+fi
+AM_CONDITIONAL([WITH_STORAGE_RBD],  [test "$with_storage_rbd" = "yes"])
 
 LIBPARTED_CFLAGS=
 LIBPARTED_LIBS=
@@ -2473,6 +2483,7 @@ AC_MSG_NOTICE([   iSCSI: $with_storage_iscsi])
 AC_MSG_NOTICE([    SCSI: $with_storage_scsi])
 AC_MSG_NOTICE([   mpath: $with_storage_mpath])
 AC_MSG_NOTICE([    Disk: $with_storage_disk])
+AC_MSG_NOTICE([     RBD: $with_storage_rbd])
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([Security Drivers])
 AC_MSG_NOTICE([])

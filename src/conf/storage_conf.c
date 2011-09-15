@@ -52,7 +52,7 @@ VIR_ENUM_IMPL(virStoragePool,
               VIR_STORAGE_POOL_LAST,
               "dir", "fs", "netfs",
               "logical", "disk", "iscsi",
-              "scsi", "mpath")
+              "scsi", "mpath", "rbd")
 
 VIR_ENUM_IMPL(virStoragePoolFormatFileSystem,
               VIR_STORAGE_POOL_FS_LAST,
