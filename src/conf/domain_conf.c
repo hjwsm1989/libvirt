@@ -2066,7 +2066,7 @@ virDomainDiskDefParseXML(virCapsPtr caps,
                          unsigned int flags)
 {
     virDomainDiskDefPtr def;
-    xmlNodePtr cur, host;
+    xmlNodePtr cur, child;
     char *type = NULL;
     char *device = NULL;
     char *driverName = NULL;
@@ -2084,6 +2084,8 @@ virDomainDiskDefParseXML(virCapsPtr caps,
     char *devaddr = NULL;
     virStorageEncryptionPtr encryption = NULL;
     char *serial = NULL;
+    char *authId = NULL;
+    char *authDomain = NULL;
 
     if (VIR_ALLOC(def) < 0) {
         virReportOOMError();
@@ -2137,10 +2139,10 @@ virDomainDiskDefParseXML(virCapsPtr caps,
                                              _("missing name for disk source"));
                         goto error;
                     }
-                    host = cur->children;
-                    while (host != NULL) {
-                        if (host->type == XML_ELEMENT_NODE &&
-                            xmlStrEqual(host->name, BAD_CAST "host")) {
+                    child = cur->children;
+                    while (child != NULL) {
+                        if (child->type == XML_ELEMENT_NODE &&
+                            xmlStrEqual(child->name, BAD_CAST "host")) {
                             if (VIR_REALLOC_N(hosts, nhosts + 1) < 0) {
                                 virReportOOMError();
                                 goto error;
@@ -2149,20 +2151,30 @@ virDomainDiskDefParseXML(virCapsPtr caps,
                             hosts[nhosts].port = NULL;
                             nhosts++;
 
-                            hosts[nhosts - 1].name = virXMLPropString(host, "name");
+                            hosts[nhosts - 1].name = virXMLPropString(child, "name");
                             if (!hosts[nhosts - 1].name) {
                                 virDomainReportError(VIR_ERR_INTERNAL_ERROR,
                                                      "%s", _("missing name for host"));
                                 goto error;
                             }
-                            hosts[nhosts - 1].port = virXMLPropString(host, "port");
+                            hosts[nhosts - 1].port = virXMLPropString(child, "port");
                             if (!hosts[nhosts - 1].port) {
                                 virDomainReportError(VIR_ERR_INTERNAL_ERROR,
                                                      "%s", _("missing port for host"));
                                 goto error;
                             }
                         }
-                        host = host->next;
+                        if (child->type == XML_ELEMENT_NODE &&
+                            xmlStrEqual(child->name, BAD_CAST "auth")) {
+                            authId = virXMLPropString(child, "id");
+                            if (!authId) {
+                                virDomainReportError(VIR_ERR_INTERNAL_ERROR,
+                                                     "%s", _("missing id for auth"));
+                                goto error;
+                            }
+                            authDomain = virXMLPropString(child, "domain");
+                        }
+                        child = child->next;
                     }
                     break;
                 default:
@@ -2373,6 +2385,10 @@ virDomainDiskDefParseXML(virCapsPtr caps,
     hosts = NULL;
     def->nhosts = nhosts;
     nhosts = 0;
+    def->authId = authId;
+    authId = NULL;
+    def->authDomain = authDomain;
+    authDomain = NULL;
     def->driverName = driverName;
     driverName = NULL;
     def->driverType = driverType;
@@ -2408,6 +2424,8 @@ cleanup:
     VIR_FREE(hosts);
     VIR_FREE(protocol);
     VIR_FREE(device);
+    VIR_FREE(authDomain);
+    VIR_FREE(authId);
     VIR_FREE(driverType);
     VIR_FREE(driverName);
     VIR_FREE(cachetag);
@@ -8645,12 +8663,19 @@ virDomainDiskDefFormat(virBufferPtr buf,
             if (def->src) {
                 virBufferEscapeString(buf, " name='%s'", def->src);
             }
-            if (def->nhosts == 0) {
+            if (def->nhosts == 0 && def->authId == NULL) {
                 virBufferAsprintf(buf, "/>\n");
             } else {
                 int i;
 
                 virBufferAsprintf(buf, ">\n");
+                if (def->authId) {
+                    virBufferAsprintf(buf, "        <auth id='%s'",
+                                      def->authId);
+                    if (def->authDomain)
+                        virBufferAsprintf(buf, " domain='%s'", def->authDomain);
+                    virBufferStrcat(buf, "/>\n", NULL);
+                }
                 for (i = 0; i < def->nhosts; i++) {
                     virBufferEscapeString(buf, "        <host name='%s'",
                                           def->hosts[i].name);

@@ -221,6 +221,8 @@ struct _virDomainDiskDef {
     int protocol;
     int nhosts;
     virDomainDiskHostDefPtr hosts;
+    char *authDomain;     /* ceph cluster name */
+    char *authId;         /* ceph auth id */
     char *driverName;
     char *driverType;
     char *serial;
