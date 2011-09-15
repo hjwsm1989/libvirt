@@ -22,6 +22,7 @@
     <disk type='network' device='disk'>
       <driver name='qemu' type='raw'/>
       <source protocol='rbd' name='pool/image'>
+        <auth id='myname'/>
         <host name='mon1.example.org' port='6321'/>
         <host name='mon2.example.org' port='6322'/>
         <host name='mon3.example.org' port='6322'/>
